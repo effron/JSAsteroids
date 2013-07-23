@@ -51,39 +51,55 @@ var Asteroids = (function() {
     ctx.fill();
   };
 
+  Asteroid.prototype.isHit = function(bullet) {
+    var distance = Math.sqrt(Math.pow(this.xPos - bullet.xPos, 2) +
+                             Math.pow(this.yPos - bullet.yPos, 2))
+    return (distance < this.radius + bullet.radius);
+  };
+
   var Ship = function() {
     MovingObject.call(this, WIDTH/2, HEIGHT/2, 10, 0, 0);
     this.angularDirec = 0;
     this.angularVel = 0;
+    this.lives = 3;
   };
 
   Ship.prototype = new Surrogate();
   //Updates ship position with screen-wrap
   Ship.prototype.update = function(){
-    console.log(that.angularVel);
     this.xPos = (this.xPos + this.xVel + WIDTH) % WIDTH;
     this.yPos = (this.yPos + this.yVel + HEIGHT) % HEIGHT;
     this.angularDirec = (this.angularDirec + this.angularVel) % (Math.PI*2);
     this.angularVel *= .85;
-    this.xVel = this.xVel * .95;
-    this.yVel = this.yVel * .95;
+    this.xVel = this.xVel * .985;
+    this.yVel = this.yVel * .985;
   };
 
-  Ship.prototype.power = function() {
+  Ship.prototype.isHit = function(asteroid){
+    var distance = Math.sqrt(Math.pow(this.xPos - asteroid.xPos, 2) +
+                             Math.pow(this.yPos - asteroid.yPos, 2))
+    return (distance < this.radius + asteroid.radius);
+  }
+
+  Ship.prototype.power = function(game) {
     var that = this;
 
     key('left', function(){
-      that.angularVel += -0.07;
+      that.angularVel += -0.03;
     });
 
     key('right', function(){
-      that.angularVel += 0.07;
+      that.angularVel += 0.03;
     });
 
     key('up', function() {
-      that.xVel += Math.sin(that.angularDirec);
-      that.yVel -= Math.cos(that.angularDirec);
-    })
+      that.xVel += Math.sin(that.angularDirec) * .5;
+      that.yVel -= Math.cos(that.angularDirec) * .5;
+    });
+
+    key('space', function(){
+      game.bullets.push(new Bullet(that));
+    });
   }
 
   //Draws the ship
@@ -96,17 +112,36 @@ var Asteroids = (function() {
     ctx.fill();
   }
 
+  var Bullet = function(ship) {
+    MovingObject.call(this, ship.xPos + ship.radius*Math.sin(ship.angularDirec),
+                      ship.yPos - ship.radius*Math.cos(ship.angularDirec), 1.5,
+                      ship.xVel * .5 + Math.sin(ship.angularDirec)*5,
+                      ship.yVel * .5 - Math.cos(ship.angularDirec)*5)
+  };
+  Bullet.prototype = new Surrogate();
+
+  Bullet.prototype.render = function(ctx){
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+
+    ctx.arc(this.xPos, this.yPos, this.radius, 0, 2 * Math.PI, false);
+    ctx.fill();
+  };
+
   var Game = function(canvasEl) {
     this.ctx = canvasEl.getContext("2d");
-
-    this.asteroids = [];
     this.ship = new Ship();
-
+    this.bullets = [];
+    this.score = 0;
+  };
+  //Places asteroids by calling randomAsteroid
+  Game.prototype.initializeAsteroids = function(){
+    this.asteroids = [];
     var that = this;
     _.times(6, function(){
       that.asteroids.push(Asteroid.randomAsteroid());
     });
-  };
+  }
   //Calls object specific drawing methods for entire game
   Game.prototype.render = function() {
     that = this;
@@ -114,24 +149,62 @@ var Asteroids = (function() {
     _.each(that.asteroids, function(asteroid) {
       asteroid.render(that.ctx);
     });
-    this.ship.render(this.ctx);
+
+    that.ship.render(that.ctx);
+
+    _.each(that.bullets, function(bullet){
+      bullet.render(that.ctx);
+    });
+
+    that.ctx.fillStyle = "purple";
+    that.ctx.font = "12pt Arial";
+    that.ctx.fillText("Lives: " + that.ship.lives, 5, 15 );
+    that.ctx.fillText("Score: " + that.score, 80, 15 );
   };
   //Creates new asteroids during game play
   Game.prototype.addAsteroid = function(){
     this.asteroids.push(Asteroid.randomAsteroid());
   }
+  //If ship is hit by asteroid, decrement lives and reset game.
+  Game.prototype.resetAfterHit = function(){
+    this.ship.lives -= 1;
+    this.initializeAsteroids();
+    this.ship.xPos = WIDTH/2;
+    this.ship.yPos = HEIGHT/2;
+    this.bullets = [];
+  }
   //Calls object specific position update methods for entire game
   Game.prototype.update = function(){
-    that = this;
+    var that = this;
     deadAsteroids = [];
+    deadBullets = [];
     _.each(that.asteroids, function(asteroid){
       asteroid.update();
+      if (that.ship.isHit(asteroid)){
+        that.resetAfterHit();
+      }
+      _.each(that.bullets, function(bullet) {
+        if (asteroid.isHit(bullet)){
+          deadAsteroids.push(asteroid);
+          deadBullets.push(bullet);
+          that.score += 10;
+        }
+      })
+
       if (asteroid.offScreen()){
         deadAsteroids.push(asteroid)
       }
     });
-
     that.asteroids = _.difference(that.asteroids, deadAsteroids);
+
+    _.each(that.bullets, function(bullet){
+      bullet.update();
+
+      if (bullet.offScreen()){
+        deadBullets.push(bullet)
+      }
+    });
+    that.bullets = _.difference(that.bullets, deadBullets);
 
     that.ship.update();
   };
@@ -139,16 +212,15 @@ var Asteroids = (function() {
   Game.prototype.start = function() {
     var that = this;
 
-    that.ship.power();
+    that.initializeAsteroids();
+    that.ship.power(that);
     window.setInterval(function () {
       that.update();
       that.render();
     }, 18);
     window.setInterval(function(){
       that.addAsteroid();
-    }, 5000)
-
-
+    }, 3000)
   };
 
   return {
