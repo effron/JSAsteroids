@@ -32,23 +32,29 @@ var Asteroids = (function() {
   Asteroid.prototype = new Surrogate();
   //Creates new asteroid with random attributes
   Asteroid.randomAsteroid = function(){
-    var xPos = Math.random() * WIDTH;
-    var yPos = Math.random() * HEIGHT;
+    var corner = [0,1];
+    var xPos = WIDTH * corner[Math.floor(Math.random() * 2)];
+    var yPos = HEIGHT * corner[Math.floor(Math.random() * 2)];
     var radius = 20;
     var direc = [-1,1];
-    var xVel = Math.random() * direc[Math.floor(Math.random() * 2)];
-    var yVel = Math.random() * direc[Math.floor(Math.random() * 2)];
+    var xVel = 4 * Math.random() * direc[Math.floor(Math.random() * 2)];
+    var yVel = 4 * Math.random() * direc[Math.floor(Math.random() * 2)];
 
     return new Asteroid(xPos, yPos, radius, xVel, yVel);
   }
   //Draws the asteroid
   Asteroid.prototype.render = function(ctx) {
-    ctx.fillStyle = "green";
+    ctx.fillStyle = '#7cfc00';
     ctx.beginPath();
 
     ctx.arc(this.xPos, this.yPos, this.radius, 0, Math.PI*2, false);
     ctx.fill();
   };
+
+  Asteroid.prototype.update = function(ctx) {
+    this.xPos = (this.xPos + this.xVel + WIDTH) % WIDTH;
+    this.yPos = (this.yPos + this.yVel + HEIGHT) % HEIGHT;
+  }
 
   Asteroid.prototype.isHit = function(bullet) {
     var distance = Math.sqrt(Math.pow(this.xPos - bullet.xPos, 2) +
@@ -203,6 +209,7 @@ var Asteroids = (function() {
     this.ship.yPos = HEIGHT/2;
     this.ship.thrust = false;
     this.ship.angularDirec = 0;
+    this.ship.angularVel = 0;
     this.ship.xVel = 0;
     this.ship.yVel = 0;
     this.bullets = [];
@@ -225,9 +232,6 @@ var Asteroids = (function() {
         }
       })
 
-      if (asteroid.offScreen()){
-        deadAsteroids.push(asteroid)
-      }
     });
     that.asteroids = _.difference(that.asteroids, deadAsteroids);
 
