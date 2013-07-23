@@ -25,6 +25,8 @@ var Asteroids = (function() {
 
   var Asteroid = function(xPos, yPos, radius, xVel, yVel){
     MovingObject.call(this, xPos, yPos, radius, xVel, yVel);
+    this.img = new Image();
+    this.img.src = 'asteroid.png';
   };
 
   var Surrogate = function() {};
@@ -44,11 +46,7 @@ var Asteroids = (function() {
   }
   //Draws the asteroid
   Asteroid.prototype.render = function(ctx) {
-    ctx.fillStyle = '#7cfc00';
-    ctx.beginPath();
-
-    ctx.arc(this.xPos, this.yPos, this.radius, 0, Math.PI*2, false);
-    ctx.fill();
+    ctx.drawImage(this.img,this.xPos - this.radius,this.yPos - this.radius);
   };
 
   Asteroid.prototype.update = function(ctx) {
