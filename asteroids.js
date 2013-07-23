@@ -163,8 +163,11 @@ var Asteroids = (function() {
     this.bullets = [];
     this.score = 0;
     this.lives = 3;
+    this.gameOver = false;
     this.img = new Image();
     this.img.src = 'space.jpg';
+    this.overImg = new Image();
+    this.overImg.src = 'over.jpg';
   };
   //Places asteroids by calling randomAsteroid
   Game.prototype.initializeAsteroids = function(){
@@ -194,6 +197,10 @@ var Asteroids = (function() {
     that.ctx.font = "12pt Arial";
     that.ctx.fillText("Lives: " + that.lives, 5, 15 );
     that.ctx.fillText("Score: " + that.score, 80, 15 );
+
+    if (that.gameOver){
+      that.ctx.drawImage(that.overImg, 0, 0);
+    }
   };
   //Creates new asteroids during game play
   Game.prototype.addAsteroid = function(){
@@ -244,14 +251,16 @@ var Asteroids = (function() {
 
     that.ship.update();
     if (that.lives < 1) {
-      if (confirm("Game over.\n" + "Score: " + that.score +
-                  "\n\nPlay again?")) {
-        that.score = 0;
-        that.resetAfterHit();
-        that.lives = 3;
-      }
+      this.gameOver = true;
     }
   };
+
+  Game.prototype.resetGame = function() {
+    this.score = 0;
+    this.resetAfterHit();
+    this.lives = 3;
+    this.gameOver = false;
+  }
   //Runs the Asteroids game
   Game.prototype.start = function() {
     var that = this;
@@ -265,6 +274,12 @@ var Asteroids = (function() {
     window.setInterval(function(){
       that.addAsteroid();
     }, 2000)
+
+    key('enter', function() {
+      if (that.gameOver) {
+        that.resetGame();
+      }
+    });
   };
 
   return {
