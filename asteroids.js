@@ -62,6 +62,10 @@ var Asteroids = (function() {
     this.angularDirec = 0;
     this.angularVel = 0;
     this.lives = 3;
+    this.xAccel = 0;
+    this.yAccel = 0;
+    this.shootable = true;
+    this.thrust = false;
   };
 
   Ship.prototype = new Surrogate();
@@ -70,9 +74,18 @@ var Asteroids = (function() {
     this.xPos = (this.xPos + this.xVel + WIDTH) % WIDTH;
     this.yPos = (this.yPos + this.yVel + HEIGHT) % HEIGHT;
     this.angularDirec = (this.angularDirec + this.angularVel) % (Math.PI*2);
-    this.angularVel *= .85;
     this.xVel = this.xVel * .985;
     this.yVel = this.yVel * .985;
+    if (this.thrust){
+      this.xAccel = Math.sin(this.angularDirec) * .2;
+      this.yAccel = -Math.cos(this.angularDirec) * .2;
+    }
+    else {
+      this.xAccel = 0;
+      this.yAccel = 0;
+    }
+    this.xVel = this.xVel + this.xAccel;
+    this.yVel = this.yVel + this.yAccel;
   };
 
   Ship.prototype.isHit = function(asteroid){
@@ -80,25 +93,39 @@ var Asteroids = (function() {
                              Math.pow(this.yPos - asteroid.yPos, 2))
     return (distance < this.radius + asteroid.radius);
   }
-
+  //Defines key events
   Ship.prototype.power = function(game) {
     var that = this;
 
     key('left', function(){
-      that.angularVel += -0.03;
+      that.angularVel = -0.03;
     });
 
     key('right', function(){
-      that.angularVel += 0.03;
+      that.angularVel = 0.03;
     });
 
     key('up', function() {
-      that.xVel += Math.sin(that.angularDirec) * .5;
-      that.yVel -= Math.cos(that.angularDirec) * .5;
+      that.thrust = true;
     });
 
     key('space', function(){
-      game.bullets.push(new Bullet(that));
+      if (that.shootable){
+        game.bullets.push(new Bullet(that));
+        that.shootable = false;
+      }
+    });
+
+    keyup('left, right', function(){
+      that.angularVel = 0;
+    });
+
+    keyup('up', function(){
+      that.thrust = false;
+    });
+
+    keyup('space', function(){
+      that.shootable = true;
     });
   }
 
@@ -220,7 +247,7 @@ var Asteroids = (function() {
     }, 18);
     window.setInterval(function(){
       that.addAsteroid();
-    }, 3000)
+    }, 2000)
   };
 
   return {
