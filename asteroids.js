@@ -53,26 +53,47 @@ var Asteroids = (function() {
 
   var Ship = function() {
     MovingObject.call(this, WIDTH/2, HEIGHT/2, 10, 0, 0);
+    this.angularDirec = 0;
+    this.angularVel = 0;
   };
 
   Ship.prototype = new Surrogate();
   //Updates ship position with screen-wrap
   Ship.prototype.update = function(){
+    console.log(that.angularVel);
     this.xPos = (this.xPos + this.xVel + WIDTH) % WIDTH;
     this.yPos = (this.yPos + this.yVel + HEIGHT) % HEIGHT;
+    this.angularDirec = (this.angularDirec + this.angularVel) % (Math.PI*2);
+    this.angularVel *= .85;
+    this.xVel = this.xVel * .95;
+    this.yVel = this.yVel * .95;
   };
-  //Controls ship movement based on key events
-  Ship.prototype.power = function() {
 
+  Ship.prototype.power = function() {
+    var that = this;
+
+    key('left', function(){
+      that.angularVel += -0.07;
+    });
+
+    key('right', function(){
+      that.angularVel += 0.07;
+    });
+
+    key('up', function() {
+      that.xVel += Math.sin(that.angularDirec);
+      that.yVel -= Math.cos(that.angularDirec);
+    })
   }
+
   //Draws the ship
   Ship.prototype.render = function(ctx) {
     ctx.fillStyle = "red";
     ctx.beginPath();
 
-    ctx.arc(this.xPos, this.yPos, this.radius, 0, Math.PI*2, false);
+    ctx.arc(this.xPos, this.yPos, this.radius, Math.PI+this.angularDirec,
+            Math.PI*2+this.angularDirec, false);
     ctx.fill();
-
   }
 
   var Game = function(canvasEl) {
@@ -117,6 +138,8 @@ var Asteroids = (function() {
   //Runs the Asteroids game
   Game.prototype.start = function() {
     var that = this;
+
+    that.ship.power();
     window.setInterval(function () {
       that.update();
       that.render();
@@ -124,7 +147,8 @@ var Asteroids = (function() {
     window.setInterval(function(){
       that.addAsteroid();
     }, 5000)
-    console.log(that.ship.update)
+
+
   };
 
   return {
