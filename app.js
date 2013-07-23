@@ -1,6 +1,6 @@
 $(function () {
-  var canvas = $("<canvas width='" + 600 +
-                 "' height='" + 400 + "'></canvas>");
+  var canvas = $("<canvas width='" + 800 +
+                 "' height='" + 600 + "'></canvas>");
   $('body').append(canvas);
 
   // `canvas.get(0)` unwraps the jQuery'd DOM element;
