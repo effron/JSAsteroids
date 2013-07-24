@@ -119,7 +119,15 @@ var Asteroids = (function() {
     });
 
     keyup('left, right', function(){
-      that.angularVel = 0;
+      if(key.isPressed('left')){
+        that.angularVel = -0.05;
+      }
+      else if(key.isPressed('right')){
+        that.angularVel = 0.05;
+      }
+      else {
+        that.angularVel = 0;
+      }
     });
 
     keyup('up', function(){
