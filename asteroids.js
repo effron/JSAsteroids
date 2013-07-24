@@ -281,7 +281,7 @@ var Asteroids = (function() {
     }, 18);
     window.setInterval(function(){
       that.addAsteroid();
-    }, 2000)
+    }, 1500)
 
     key('enter', function() {
       if (that.gameOver) {
