@@ -147,6 +147,28 @@ var Asteroids = (function() {
     ctx.arc(this.xPos, this.yPos, this.radius, Math.PI+this.angularDirec,
             Math.PI*2+this.angularDirec, false);
     ctx.fill();
+    
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+
+    ctx.arc(this.xPos, this.yPos, this.radius, this.angularDirec,
+            Math.PI/3+this.angularDirec, false);
+    ctx.fill();
+    
+    ctx.fillStyle = "yellow";
+    ctx.beginPath();
+
+    ctx.arc(this.xPos, this.yPos, this.radius, Math.PI/3 + this.angularDirec,
+            2 * Math.PI/3+this.angularDirec, false);
+    ctx.fill();
+   
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+
+    ctx.arc(this.xPos, this.yPos, this.radius, 2 * Math.PI/3+ this.angularDirec,
+            Math.PI+this.angularDirec, false);
+    ctx.fill();
+            
   }
 
   var Bullet = function(ship) {
